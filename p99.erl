@@ -12,14 +12,44 @@
 %% @end
 %% =================================
 -module(p99).
+-author('psholtz [at] gmail (dot) com').
 
 %% ========================= 
 %% List Manipulation Exports
 %% ========================= 
--export([my_last/1, my_but_last/1, element_at/2, length/1, reverse_no_tail/1, reverse/1, palindrome/1]).
--export([my_flatten/1, compress/1, pack/1, encode/1, encode_modified1/1, encode_modified/1, decode_modified/1]).
--export([encode_direct/1, dupli/1, repli/2, drop/2, split/2, slice/3, rotate/2, remove_at/2, insert_at/3]).
--export([range/2, md_select/2, lotto_select/2, md_permu/1, combinations/2, group3/1, group/2, lsort/1, lfsort/1]).
+-export([my_last/1,            %% Problem 01
+	 my_but_last/1,        %% Problem 02
+	 element_at/2,         %% Problem 03
+	 length/1,             %% Problem 04
+	 reverse/1,            %% Problem 05
+	 reverse_no_tail/1,
+	 palindrome/1,         %% Problem 06
+ 	 my_flatten/1,         %% Problem 07
+	 compress/1,           %% Problem 08
+	 pack/1,               %% Problem 09
+	 encode/1,             %% Problem 10
+	 encode_modified/1,    %% Problem 11
+	 encode_modified1/1,
+	 decode_modified/1,    %% Problem 12
+	 encode_direct/1,      %% Problem 13
+	 dupli/1,              %% Problem 14
+	 repli/2,              %% Problem 15 
+	 drop/2,               %% Problem 16
+	 split/2,              %% Problem 17
+	 slice/3,              %% Problem 18
+	 rotate/2,             %% Problem 19
+	 remove_at/2,          %% Problem 20
+	 insert_at/3,          %% Problem 21
+	 range/2,              %% Problem 22
+	 md_select/2,          %% Problem 23
+	 lotto_select/2,       %% Problem 24
+	 md_permu/1,           %% Problem 25
+	 combinations/2,       %% Problem 26
+	 group3/1,             %% Problem 27 
+	 group/2,  
+	 lsort/1,              %% Problem 28
+	 lfsort/1
+]).
 
 %% ============= 
 %% Documentation
