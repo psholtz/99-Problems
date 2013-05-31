@@ -51,6 +51,24 @@
 	 lfsort/1
 ]).
 
+%% ================== 
+%% Arithmetic Exports
+%% ================== 
+-export([is_prime/1,              %% Problem 31
+         is_prime1/1,
+	 gcd/2,                   %% Problem 32
+	 coprime/2,               %% Problem 33
+	 totient_phi/1,           %% Problem 34
+	 prime_factors/1,         %% Problem 35
+	 prime_factors_mult/1,    %% Problem 36
+	 totient_phi_improved/1,  %% Problem 37
+	 totient_phi_compare/1,   %% Problem 38
+	 prime_number_list/2,     %% Problem 39
+	 goldbach/1,              %% Problem 40
+	 goldbach_list/2,         %% Problem 41
+	 goldbach_list/3         
+]).
+
 %% ============= 
 %% Documentation
 %% ============= 
@@ -807,7 +825,7 @@ group3(L) when is_list(L) ->
 -spec unfold(List, DeepList) -> DeepList when
       List :: [term()],
       DeepList :: [term() | DeepList].
-		   
+
 unfold([], Acc) -> Acc;
 unfold([H|T], Acc) -> 
     A = element(1, H),
@@ -867,7 +885,7 @@ group(L, [A, B, C]) when is_list(L), is_integer(A), is_integer(B), is_integer(C)
 	        { X, lists:map(Comb2, combinations(B, (L--X))) }
             end,
     unfold(lists:map(Comb1, combinations(A, L)), []).
-		  
+
 %% =============================================================================================
 %% @doc
 %% P28A (**) Sorting a list of lists according to length of sublists.
@@ -905,7 +923,7 @@ sort([H|T], Predicate) ->
     sort([X || X <- T, Predicate(X,H)], Predicate)
     ++ [H] ++
     sort([X || X <- T, not Predicate(X,H)], Predicate).
-		    
+
 %%
 %% The "predicate" term above lets us define custom sort predicates/metrics for how
 %% to arrange the elements of the target set.
@@ -993,6 +1011,426 @@ make_sort_predicate(L) when is_list(L) ->
 %%  PART II -- ARITHMETIC
 %% =======================
 %%
+
+%% ============================================================ 
+%% @doc
+%% P31 (**) Determine whether a given integer number is prime.
+%% @end
+%%
+%% Example:
+%% > (is-prime 7)
+%% > true
+%% ============================================================ 
+%%
+%% One way to test whether a number is prime is to determine whether it is equal to its
+%% own smallest divisor. The procedure below will return the smallest divisor of N:
+%%
+-spec smallest_divisor(N) -> M when 
+      N :: pos_integer(),
+      M :: pos_integer().
+
+smallest_divisor(N) -> find_divisor(N,2).
+
+%%
+%% Given arguments N and Test, the procedure terminates and returns Test if Test is a divisor 
+%% of N. Otherwise, it recursively calls itself testing the next possible divisor. If value of 
+%% Test is larger than the square root of N, we terminate and return N as the solution.
+%%
+-spec find_divisor(X, Y) -> Z when
+      X :: pos_integer(),
+      Y :: pos_integer(),
+      Z :: pos_integer().
+
+find_divisor(N, Test) when Test * Test > N -> N;
+find_divisor(N, Test) when (N rem Test) =:= 0 -> Test;
+find_divisor(N, Test) -> 
+    Next = fun() when Test =:= 2 -> 3;
+	      () -> Test + 1
+           end,
+    find_divisor(N, Next()).
+
+%% 
+%% With these supporting functions defined, the "is_prime" predicate is easily defined
+%% as being true when the argument N is equal to its own smallest divisor:
+%%
+-spec is_prime(N) -> T when
+      N :: pos_integer(),
+      T :: boolean().
+
+is_prime(1) -> false;
+is_prime(N) -> N =:= smallest_divisor(N).
+
+%%
+%% Another (faster) way to perform primality testing is to use a stochastic
+%% algorithm based on Fermat's Little Theorem: In n is a prime number and a 
+%% is any positive integer less than n, then a raised to the n-th power is 
+%% congruent to a modulo n.
+%%
+%% The details of this technique are given in the MIT SICP text, Section 1.2.
+%%
+%% We give an Erlang implementation below:
+%%
+
+%%
+%% First we require a "square" procedure:
+%%
+-spec square(N) -> M when
+      N :: pos_integer(),
+      M :: pos_integer().
+
+square(N) -> N * N.
+
+%%
+%% The "expmod" procedure calculates the exponent of a number modulo another number:
+%%
+-spec expmod(B, E, M) -> A when
+      B :: pos_integer(),
+      E :: pos_integer(),
+      M :: pos_integer(),
+      A :: pos_integer().
+
+expmod(_, 0, _) -> 1;
+expmod(Base, Exp, M) when (Exp rem 2) =:= 0 -> 
+    square(expmod(Base, Exp div 2, M)) rem M;
+expmod(Base, Exp, M) -> 
+    (Base * expmod(Base, Exp-1, M)) rem M.
+
+%%
+%% We need a randomly selected integer in the range from 2 to N-3, inclusive.
+%%
+%% Note that random:uniform(N) is an Erlang library function that returns 
+%% a uniformly distributed random number between 1 and N, inclusive.
+%%
+-spec get_random_a(N) -> N when
+      N :: pos_integer().
+
+get_random_a(N) ->
+    1 + random:uniform(N-4).
+
+%%
+%% Use the "expmod" procedure to run a test for primailty:
+%%
+-spec is_prime_test(N,A) -> T when
+      N :: pos_integer(),
+      A :: pos_integer(),
+      T :: boolean().
+
+is_prime_test(N,A) ->
+    expmod(A, N-1, N) =:= 1.
+
+%%
+%% The actual stochastic algorithm based on Fermat's Little Theorem follows.
+%%
+%% Running the stochastic test more and more times will generate greater and greater
+%% bounds of certainty, but we find the running the test three times gives pretty 
+%% solid and confident results. We "hard code" the answer for the first five integers.
+%%
+-spec is_prime1(N) -> T when
+      N :: pos_integer(),
+      T :: boolean().
+
+is_prime1(N) when N =:= 1 -> false;
+is_prime1(N) when N =:= 2 -> true;
+is_prime1(N) when N =:= 3 -> true;
+is_prime1(N) when N =:= 4 -> false;
+is_prime1(N) when N =:= 5 -> true;
+is_prime1(N) -> 
+    is_prime_test(N, N-1) and
+    is_prime_test(N, N-2) and
+    is_prime_test(N, get_random_a(N)) and
+    is_prime_test(N, get_random_a(N)) and
+    is_prime_test(N, get_random_a(N)).
+    
+%% ================================================================================
+%% @doc
+%% P32 (**) Determine the greatest common divisor of two positive integer numbers.
+%%
+%% Use Euclid's algorithm.
+%% @end
+%%
+%% Example:
+%% > (gcd 36 63)
+%% > 9
+%% ================================================================================
+-spec gcd(A,B) -> N when
+      A :: pos_integer(),
+      B :: pos_integer(),
+      N :: pos_integer().
+
+gcd(A,0) -> A;
+gcd(A,B) -> gcd(B, A rem B).
+
+%% =====================================================================
+%% @doc
+%% P33 (*) Determine whether two positive integer numbers are coprime.
+%% 
+%% Two numbers are coprime if their greatest common divisor equals 1.
+%% @end
+%%
+%% Example:
+%% > (coprime 35 64)
+%% > true
+%% =====================================================================
+-spec coprime(A,B) -> T when
+      A :: pos_integer(),
+      B :: pos_integer(),
+      T :: boolean().
+
+coprime(A,B) -> gcd(A,B) =:= 1.
+
+%% ============================================================================================
+%% @doc
+%% P34 (**) Calculate Euler's totient function phi(m).
+%%
+%% Euler's so-called totient function phi(m) is defined as the number of positive integers 
+%% r (1 <= r < m) that are coprime to m. 
+%% @end
+%%
+%% Example: m = 10; r = 1, 3, 7, 9; thus phi(m) = 4. Note the special case phi(i) = 1.
+%% > (totient-phi 10)
+%% > 4
+%% 
+%% Find out what the value of phi(m) is if m is a prime number. Euler's totient function plays
+%% an important role in one of the most widely used public key cryptography methods (RSA). In
+%% this exercise, you should use the most primitive method to calculate this function (there
+%% are smarter ways that we shall discuss later).
+%% =============================================================================================
+-spec totient_phi(N) -> M when
+      N :: pos_integer(),
+      M :: pos_integer().
+			   
+totient_phi(M) ->    
+    length( lists:filter(fun(N) -> coprime(N,M) end, lists:seq(1,M)) ).
+		     
+%% ======================================================================== 
+%% @doc
+%% P35 (**) Determine the prime factors of a given positive integer.
+%%
+%% Construct a flat list containing the prime factors in ascending order.
+%% @end
+%%
+%% Example:
+%% > (prime-factors 315)
+%% > (3 3 5 7)
+%% ======================================================================== 
+%%
+%% The following is a simple, "naive" algorithm for finding the prime factors
+%% of (comparatively) small integers. For larger integers, an algorithm like
+%% the quadratic sieve, invented by Carl Pomerance in 1981, would be more 
+%% effective. QS is a faster, effective procedure for calculating prime factors
+%% for numbers up to (roughly) 100 digits in length.
+%%
+-spec prime_factors(N) -> [N] when
+      N :: pos_integer().
+
+prime_factors(N) ->
+    Primes = lists:filter(fun is_prime/1, lists:seq(2,N)),
+    PrimeFactorsIter = fun([], Factors, _M, _Func) -> 
+			       Factors;
+			  ([H|T], Factors, M, Func) when M rem H =:= 0 ->
+			       Func([H|T], lists:append(Factors, [H]), M div H, Func);
+			  ([_|T], Factors, M, Func) ->
+			       Func(T, Factors, M, Func)
+		        end,
+    PrimeFactorsIter(Primes, [], N, PrimeFactorsIter).
+
+%% ========================================================================= 
+%% @doc
+%% P36 (**) Determine the prime factors of a given positive integer (2).
+%% 
+%% Construct a list containing the prime factors and their multiplicity.
+%% @end
+%%
+%% Example:
+%% > (prime-factors-mult 315)
+%% > ((3 2) (5 1) (7 1))
+%% 
+%% Hint: The problem is similar to problem P13.
+%% ========================================================================= 
+%%
+%% Actually, the problem is more similar to Problem P11, but in P11 the results 
+%% are returned in the opposite order from which we are seeking. In other words, 
+%% we could implement something like:
+%%
+%% prime_factors_mult(N) -> encode( prime_factors(N) ).
+%%
+%% But the result would be something like:
+%%
+%% > prime_factors_mult(315)
+%% > [[2,3], [1,5], [1,7]]
+%%
+%% In other words, each sublist would be in the reverse order from what we're seeking.
+%%
+%% Instead, let's just define our own anonymous fun, similar to that in P11, but 
+%% which returns the elements in the proper order:
+%%
+-spec prime_factors_mult(N) -> List when
+      N :: pos_integer(),
+      List :: [term | List].
+
+prime_factors_mult(N) ->    
+    Encode = fun([H|T], [], Acc, Func) -> Func(T, [H,1], Acc, Func);
+		([H|T], [H,M], Acc, Func) -> Func(T, [H,M+1], Acc, Func);
+		([H|T], A, Acc, Func) -> Func(T, [H,1], [A] ++ Acc, Func);
+		([], A, Acc, _Func) -> lists:reverse([A] ++ Acc)
+             end,
+    Encode( prime_factors(N), [], [], Encode ).
+
+%% ==============================================================================================
+%% @doc
+%% P37 (**) Calculate Euler's totient function phi(m) (improved).
+%%
+%% See problem P34 for the definition of Euler's totient function. If the list of the prime
+%% factors of a number M is known in the form of problem P36 then the function phi(m) can 
+%% be efficiently calculated as follows: Let ((p1 m1) (p2 m2) (p3 m3) ..) be the list of 
+%% prime factors (and their multiplicities) of a given number M. Then phi(m) can be calculated
+%% with the following formula:
+%%
+%% phi(m) = (p1-1) * p1 ** (m1-1) * (p2-1) * p2 ** (m2-1) * (p3-1) * p3 ** (m3-1) * ...
+%%
+%% Note that a ** b stands for the b'th power of a.
+%% @end
+%% ==============================================================================================
+-spec totient_phi_improved(N) -> M when
+      N :: pos_integer(),
+      M :: pos_integer().
+
+totient_phi_improved(N) ->
+    Mapper = fun([H|T]) -> (H-1) * math:pow(H,hd(T)-1) end,
+    trunc(lists:foldl(fun(X, Prod) -> X * Prod end, 1, lists:map(Mapper, prime_factors_mult(N)))).
+
+%% ============================================================================================== 
+%% @doc
+%% P38 (*) Compare the two methods of calculating Euler's totient function.
+%% 
+%% Use the solutiosn of problems P34 and P37 to compare the algorithms. Take the number
+%% of logical inferences as a measure for efficiency. Try to calculate phi(10090) as an example.
+%% @end
+%% ============================================================================================== 
+%%
+%% It's not totally clear to me how to adapt either of these procedures to count the number of 
+%% logical inferences, so let's just use old fashioned timers. Doing this suggests that the second 
+%% procedure, while perhaps "improved" in the sense of logic and clarity, actually runs slower.
+%% The speed of this latter algorithm depends on the speed at which prime factorization can be 
+%% performed, and its likely that the "naive" implementation we gave above of prime factorization
+%% could be improved upon significantly.
+%%
+%% At any rate, running the statistics on 10090 as suggested above yields the following reasons:
+%%
+%% > Answer: 4032 (3346), 4032 (14563)
+%%
+%% That is, the first algorithm took 3,346 microseconds to execute, while the second required 14,563
+%% microseconds (substantially slower).
+%%
+-spec totient_phi_compare(N) -> no_return() when
+      N :: pos_integer().
+				    
+totient_phi_compare(N) ->
+    %% Performance numbers are given in micro (not milli!) seconds.
+    {Time1, Val1} = timer:tc(p99, totient_phi, [N]),
+    {Time2, Val2} = timer:tc(p99, totient_phi_improved, [N]),
+    io:format("Answer: ~p (~p), ~p (~p)~n", [Val1, Time1, Val2, Time2]).
+
+%% ================================================================================================ 
+%% @doc
+%% P39 (*) A list of prime numbers.
+%%
+%% Given a range of integers by its lower and upper limit, construct a list of all prime numbers 
+%% in that range.
+%% @end
+%% ================================================================================================
+-spec prime_number_list(Low, High) -> List when
+      Low :: pos_integer(),
+      High :: pos_integer(),
+      List :: [term()].
+
+prime_number_list(Low, High) ->    
+    lists:filter(fun p99:is_prime/1, lists:seq(Low, High)).
+
+%% =======================================================================================================
+%% @doc
+%% P40 (**) Goldbach's Conjecture.
+%% 
+%% Goldbach's conjecture says that every positive even number greater than 2 is the sum of two prime
+%% numbers. Example, 28 = 5 + 23. It is one of the most famous facts in number theory that has not been 
+%% proven to be correct in the general case. It has been numerically confirmed up to very large numbers
+%% (much larger than we can go with our Prolog system). Write a predicate to find the two prime numbers
+%% that sum up to a given even integer.
+%% @end
+%%
+%% > (goldbach 28)
+%% > (5 23)
+%% =======================================================================================================
+-spec goldbach(N) -> tuple() when 
+      N :: pos_integer().
+
+goldbach(N) when N > 2, N rem 2 =:=0 ->
+    Primes = prime_number_list(2, N div 2),
+    GoldbachIter = fun([], _) -> [];
+		      ([H|T], Func) ->
+			   case {is_prime(H), is_prime(N-H)} of
+			       {true, true} -> {H,N-H};
+			       _  -> Func(T, Func)
+                           end
+		   end,
+    GoldbachIter(Primes, GoldbachIter).
+
+%% =============================================================================================== 
+%% @doc
+%% P41A (**) A list of Goldbach compositions.
+%% 
+%% Given a range of integers by its lower and upper limit, print a list of all even numbers and 
+%% their Goldbach composition.
+%% @end
+%% 
+%% Example:
+%% > (goldbach-list 9 20)
+%% 10 = 3 + 7
+%% 12 = 5 + 7
+%% 14 = 3 + 11
+%% 16 = 3 + 13
+%% 18 = 5 + 13
+%% 20 = 3 + 17
+%% ===============================================================================================
+-spec goldbach_list(Low, High) -> no_return() when
+      Low :: pos_integer(),
+      High :: pos_integer().
+
+goldbach_list(Low, High) ->
+    Evens = lists:filter(fun (X) -> (X rem 2 =:= 0) and (X > 2) end, lists:seq(Low, High)),
+    Mapper = fun(X) ->
+		 {A,B} = goldbach(X),
+	         io:format("~p = ~p + ~p~n",[X, A, B])
+	     end,
+    lists:map(Mapper, Evens).
+
+%% ========================================================================================================= 
+%% @doc
+%% P41B (**) A list of Goldbach compositions.
+%%
+%% In most cases, if an even number is written as the sum of two prime numbers, one of them is very small.
+%% Very rarely, the primes are both bigger than say 50. Try to find out how many such cases there are in 
+%% the range 2 ... 3000.
+%% @end
+%% =========================================================================================================
+%%
+%% To implement this, all we need to do is adjust the "Mapper" procedure in the solution above:
+%%
+-spec goldbach_list(Low, High, Limit) -> no_return() when
+      Low :: pos_integer(),
+      High :: pos_integer(),
+      Limit :: pos_integer().
+
+goldbach_list(Low, High, Limit) ->
+    Evens = lists:filter(fun(X) -> (X rem 2 =:= 0) and (X > 2) end, lists:seq(Low, High)),
+    Mapper = fun(X) ->
+	         {A,B} = goldbach(X),
+		 case A >= Limit of
+		     true -> io:format("~p = ~p + ~p~n", [X, A, B]);
+		     false -> ok			    
+                 end    
+             end,
+    lists:map(Mapper, Evens).
 
 %%
 %% =============== 
