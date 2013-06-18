@@ -12,9 +12,6 @@
 -module(p99).
 -author('psholtz [at] gmail (dot) com').
 
-%% REMOVE THIS!!
--compile(export_all).
-
 %% ========================= 
 %% List Manipulation Exports
 %% ========================= 
@@ -85,7 +82,11 @@
 	 table2/1,               %% Problem 48
 	 gray/1,                 %% Problem 49
 	 gray_no_tail/1,
-	 gray_imp/1
+	 gray_imp/1,
+	 huffman/1,              %% Problem 50
+	 decode/2,               %% Problem 50 (prevent compiler warnings)
+	 choose_branch/2,        %% Problem 50 (prevent compiler warnings)
+	 encode/2                %% Problem 50 (prevent compiler warnings)
 ]).
 
 %% ============= 
