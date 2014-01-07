@@ -2,7 +2,7 @@
 %%      99 Questions in Erlang
 %% -------------------------------- 
 %% 
-%% Reference for the Lisp questions: http://bit.ly/EPDGk
+%% Reference for the Lisp questions: http://bit.ly/1id79HU
 %%
 %% @author Paul J. Sholtz
 %% @copyright 2013 sholtz9421.com
@@ -11,6 +11,12 @@
 %% =================================
 -module(p99).
 -author('psholtz [at] gmail (dot) com').
+
+%%
+%% Remaining to do in Logic: P47, P48.
+%% Remaining to do in Binary Trees: P64B, P65, P66, P67, P68C.
+%% Remaining to do in Multiway Trees: P70, P72, P73.
+%%
 
 %% ========================= 
 %% List Manipulation Exports
@@ -78,7 +84,7 @@
 	 impl/2,
 	 equ/2,
 	 table/1,
-	 table1/1,               %% Problem 47
+	 table1/3,               %% Problem 47
 	 table2/1,               %% Problem 48
 	 gray/1,                 %% Problem 49
 	 gray_no_tail/1,
@@ -88,6 +94,59 @@
 	 choose_branch/2,        %% Problem 50 (prevent compiler warnings)
 	 encode/2                %% Problem 50 (prevent compiler warnings)
 ]).
+
+%% =================== 
+%% Binary Tree Exports
+%% =================== 
+-export([is_tree/1,                  %% Problem 54A
+	 make_binary_tree/0,         %% Problem 54A (unit test)
+	 make_binary_tree/1,         %% Problem 54A (unit test)
+	 make_binary_tree/3,         %% Problem 54A (unit test)
+	 make_sample_tree/1,         %% Problem 54A (unit test)
+	 make_sample_tree_fake/1,    %% Problem 54A (unit test)
+	 cbal_tree/1,                %% Problem 55
+	 symmetric/1,                %% Problem 56
+	 construct/1,                %% Problem 57
+	 sym_cbal_trees_print/1,     %% Problem 58
+	 hbal_tree/1,                %% Problem 59
+	 hbal_tree_nodes/1,          %% Problem 60
+	 floor/1,                    %% Problem 60 (prevent compiler warnings)
+	 min_nodes/1,                %% Problem 60 (prevent compiler warnings)
+	 max_nodes/1,                %% Problem 60 (prevent compiler warnings)
+	 count_leaves/1,             %% Problem 61
+	 leaves/1,                   %% Problem 61A
+	 internals/1,                %% Problem 62
+	 at_level/2,                 %% Problem 62B
+	 complete_binary_tree/1,     %% Problem 63
+	 is_complete_binary_tree/1,  %% Problem 63 (unit test)
+	 layout_binary_tree/1,       %% Problem 64
+	 print_binary_tree/1,        %% Problem 64 (bonus)
+	 binary_tree_to_string/1,    %% Problem 67
+	 string_to_binary_tree/1,    %% Problem 67
+	 preorder/1,                 %% Problem 68
+	 inorder/1,                  %% Problem 68
+	 full_preorder/1,            %% Problem 68
+	 pre_full_tree/1,            %% Problem 68
+	 pre_in_tree/2,              %% Problem 68
+	 string_stream/1,            %% Problem 68
+	 string_stream_value/1,      %% Problem 68
+	 string_stream_next/1        %% Problem 68
+]).
+
+%% =====================
+%% Multiway Tree Exports
+%% =====================
+-export([is_multi_tree/1,            %% Problem 70B
+	 make_multi_tree/1,          %% Problem 70B (unit test)
+	 make_multi_tree_fake/1,     %% Problem 70B (unit test)
+	 nnodes/1,                   %% Problem 70C
+	 multi_tree_2_string/1,      %% Problem 70
+	 ipl/1,                      %% Problem 71
+	 bottom_up/1                 %% Problem 72
+]).
+
+
+-export([test/0]).
 
 %% ============= 
 %% Documentation
@@ -777,7 +836,7 @@ lotto_select(N, Size) when is_integer(N),
 md_permu(List) when is_list(List) ->
     md_select(List, length(List)).
 
-%% ==============================================================================
+%% =============================================================================
 %% @doc
 %% P26 (**) Generate the K distinct combinations chosen from a set of N objects.
 %%
@@ -790,7 +849,7 @@ md_permu(List) when is_list(List) ->
 %% Example:
 %% > (combinations 3 '(a b c d e f))
 %% > ((a b c) (a b d) (a b e) ...)
-%% ==============================================================================
+%% =============================================================================
 -spec combinations(N, List) -> DeepList when 
       N :: non_neg_integer(),
       List :: [term()],
@@ -1539,9 +1598,9 @@ goldbach_list(Low, High, Limit) when
     lists:map(Mapper, Evens).
 
 %%
-%% ============================ 
-%%  Part II -- LOGIC AND CODES
-%% ============================
+%% =============================
+%%  Part III -- LOGIC AND CODES
+%% =============================
 %%
 
 %% ==============================================================================
@@ -1762,11 +1821,81 @@ table(Expr) ->
     Print(false, false),
     io:format("~n").
 
-%% [Implement this]
-table1(_Expr) ->
-    ok.
+%% ==============================================================================
+%% @doc
+%% P47 (*) Truth table for logical expressions (II).
+%%
+%% Continue problem P46 by defining and/2, or/2, etc as being operators. This 
+%% allows us to write the logical expression in the more natural way, as in the
+%% the example: A and (A or not B). Define operator precedence as usual, i.e., 
+%% as in Java.
+%% @end
+%%
+%% Example:
+%% > table(A,B, A and (A or not B))
+%%  
+%%  true true true
+%%  true fail true
+%%  fail true fail
+%%  fail fail fail
+%% ==============================================================================
+table1(_Sym1, _Sym2, Expr) ->
+    _Prefix = atom_to_list(?MODULE) ++ ":",
+    
+    _ParseAnd = fun(List) ->
+			case length(List) of
+			    1 -> hd(List);
+			    _ -> false
+		        end
+		end,
 
-%% [Implement this]
+    %% Evaluate the expression
+    Evaluate = fun(_A,_B) ->
+		       {ok, Tokens, _} = erl_scan:string(Expr),
+		       io:format("Tokens: ~p~n", [Tokens]),
+		       true
+	       end,
+
+    %% Print out the results
+    Print = fun(A,B) ->
+		    
+		        io:format(" ~-8w ~-8w ~-8w~n", [A, B, Evaluate(A,B)])
+	    end,
+    
+    %% Run through all possible combinations
+    io:format("~nExpression: ~p~n~n", [Expr]),
+    Print(true, true),
+    Print(true, false),
+    Print(false, true),
+    Print(false, false),
+    io:format("~n").
+    
+test() ->
+    Expr1 = "A and B",
+    table1('A', 'B', Expr1).
+
+%% =============================================================================
+%% @doc
+%% P48 (**) Truth tables for logical expressions (III).
+%%
+%% Generalize problem P47 in such a way that the logical expression may contain 
+%% any number of logical variables. Define table/2 in a way that 
+%% table(List,Expr) prints the truth table for the expression Expr, which 
+%% contains the logical variables enumerated in List. 
+%% @end
+%%
+%% Example:
+%% > table([A,B,C], A and (B or C) equ A and B or A and C).
+%% 
+%%  true true true true
+%%  true true fail true
+%%  true fail true true
+%%  true fail fail true
+%%  fail true true true
+%%  fail true fail true
+%%  fail fail true true
+%%  fail fail fail true
+%% =============================================================================
 table2(_Expr) ->
     ok.
 
@@ -2196,6 +2325,1549 @@ huffman(Pairs) ->
 		     [H, list_to_atom(lists:concat(Encoding))]
 	     end,
     lists:map(Mapper, Pairs).		      
+
+%%
+%% =========================
+%%  PART IV -- BINARY TREES
+%% =========================
+%%
+
+%% ========================================================================
+%% @doc
+%% P54A (*) Check whether a given term represents a binary tree.
+%%
+%% Write a predicate istree which returns true if and only if its argument 
+%% is a list representing a binary tree.
+%% @end
+%% 
+%% Example:
+%% > (istree (a (b nil nil) nil))
+%% > true
+%%
+%% > (istree (a (b nil nil)))
+%% > false
+%% ========================================================================
+%%
+%% First define some "helper" methods that return binary trees so we can test.
+%%
+%% The following three procedures are constructors for building binary trees:
+%%
+-spec make_binary_tree() -> Tree when 
+      Tree :: term() | [term()].
+
+make_binary_tree() -> nil.
+
+-spec make_binary_tree(Root) -> Tree when 
+      Tree :: term() | [term()], 
+      Root :: term() | [term()].
+
+make_binary_tree(Root) ->
+    make_binary_tree(Root, make_binary_tree(), make_binary_tree()).
+
+-spec make_binary_tree(Root, Left, Right) -> Tree when 
+      Tree :: term() | [term()],				   
+      Root :: term() | [term()],
+      Left :: term() | [term()],
+      Right :: term() | [term()].
+
+make_binary_tree(Root, Left, Right) ->
+    [Root, Left, Right].
+
+%%
+%% Procedure for generating "sample" trees. 
+%%
+-spec make_sample_tree(N) -> Tree when 
+      N :: pos_integer(),
+      Tree :: term() | [term()].
+
+make_sample_tree(1) -> make_binary_tree();
+make_sample_tree(2) -> make_binary_tree(a);
+make_sample_tree(3) -> 
+    NodeD = make_binary_tree(d),
+    NodeE = make_binary_tree(e),
+    NodeB = make_binary_tree(b, NodeD, NodeE),
+    NodeG = make_binary_tree(g),
+    NodeF = make_binary_tree(f, NodeG, make_binary_tree()),
+    NodeC = make_binary_tree(c, make_binary_tree(), NodeF),
+    NodeA = make_binary_tree(a, NodeB, NodeC),
+    NodeA;
+make_sample_tree(4) -> 
+    NodeB = make_binary_tree(b),
+    NodeA = make_binary_tree(a, NodeB, make_binary_tree()),
+    NodeA;
+make_sample_tree(5) ->
+    NodeD = make_binary_tree(d),
+    NodeG = make_binary_tree(g),
+    NodeE = make_binary_tree(e, NodeD, NodeG),
+    NodeA = make_binary_tree(a),
+    NodeC = make_binary_tree(c, NodeA, NodeE),
+    NodeM = make_binary_tree(m),
+    NodeK = make_binary_tree(k, NodeC, NodeM),
+    NodeQ = make_binary_tree(q),
+    NodeP = make_binary_tree(p, make_binary_tree(), NodeQ),
+    NodeU = make_binary_tree(u, NodeP, make_binary_tree()),
+    NodeN = make_binary_tree(n, NodeK, NodeU),
+    NodeN;
+make_sample_tree(6) ->
+    NodeA = make_binary_tree(a),
+    NodeB = make_binary_tree(b),
+    NodeC = make_binary_tree(c),
+    NodeD = make_binary_tree(d),
+    NodeE = make_binary_tree(e),
+    NodeF = make_binary_tree(f),
+    NodeG = make_binary_tree(g),
+    NodeH = make_binary_tree(h),
+    NodeI = make_binary_tree(i, NodeA, NodeB),
+    NodeJ = make_binary_tree(j, NodeC, NodeD),
+    NodeK = make_binary_tree(k, NodeE, NodeF),
+    NodeL = make_binary_tree(l, NodeG, NodeH),
+    NodeM = make_binary_tree(m, NodeI, NodeJ),
+    NodeN = make_binary_tree(n, NodeK, NodeL),
+    NodeO = make_binary_tree(o, NodeM, NodeN),
+    NodeO;
+make_sample_tree(7) ->
+    NodeA = make_binary_tree(a),
+    NodeC = make_binary_tree(c),
+    NodeE = make_binary_tree(e),
+    NodeD = make_binary_tree(d, NodeC, NodeE),
+    NodeB = make_binary_tree(b, NodeA, NodeD),
+    NodeH = make_binary_tree(h),
+    NodeI = make_binary_tree(i, NodeH, make_binary_tree()),
+    NodeG = make_binary_tree(g, make_binary_tree(), NodeI),
+    NodeF = make_binary_tree(f, NodeB, NodeG),
+    NodeF;
+make_sample_tree(8) ->
+    NodeD = make_binary_tree(d),
+    NodeC = make_binary_tree(c, NodeD, make_binary_tree()),
+    NodeB = make_binary_tree(b, NodeC, make_binary_tree()),
+    NodeA = make_binary_tree(a, NodeB, make_binary_tree()),
+    NodeA;
+make_sample_tree(9) ->
+    NodeD = make_binary_tree(d),
+    NodeC = make_binary_tree(c, make_binary_tree(), NodeD),
+    NodeB = make_binary_tree(b, make_binary_tree(), NodeC),
+    NodeA = make_binary_tree(a, make_binary_tree(), NodeB),
+    NodeA;
+make_sample_tree(10) ->
+    NodeA1 = make_binary_tree(a),
+    NodeB = make_binary_tree(b),
+    NodeA2 = make_binary_tree(a, NodeB, NodeA1),
+    NodeA2;
+make_sample_tree(11) ->
+    NodeB = make_binary_tree(b),
+    NodeA1 = make_binary_tree(a, make_binary_tree(), NodeB),
+    NodeA2 = make_binary_tree(a, make_binary_tree(), NodeA1),
+    NodeA2;
+make_sample_tree(12) ->
+    NodeB = make_binary_tree(b),
+    NodeA1 = make_binary_tree(a),
+    NodeA2 = make_binary_tree(a, NodeA1, NodeB),
+    NodeA2.
+
+-spec make_sample_tree_fake(N) -> Tree when
+      N :: pos_integer(),
+      Tree :: term() | [term()].
+
+make_sample_tree_fake(1) -> 
+    [a, [b, nil, nil]].
+
+%%
+%% Finally, the definition of the is_tree procedure:
+%%
+-spec is_tree(A) -> boolean() when 
+      A :: term() | [term()].
+
+is_tree(nil) -> true;
+is_tree([_Root, nil, nil]) -> true;
+is_tree([_, Left, Right]) ->
+    Val1 = is_tree(Left),
+    Val2 = is_tree(Right),
+    case {Val1, Val2} of
+	{true, true} -> true;
+	_ -> false
+    end;
+is_tree(_) -> false.
+
+%% =============================================================================
+%% @doc
+%% P55 (**) Construct completely balanced binary trees
+%% 
+%% In a completely balanced binary tree, the following property holds for every
+%% node: The number of nodes in its left subtree and the number of nodes in its
+%% right subtree are almost equal, which means their difference is not greater
+%% than one.
+%%
+%% Write a function cbal-tree to construct completely balanced binary trees for 
+%% a given number of nodes. The predicate sbhould generate all solutions via
+%% backtracking. Put the letter 'x' as information into all nodes of the tree.
+%% @end
+%%
+%% Example:
+%% > cbal-tree(4,T)
+%% > T = t(x, t(x, nil, nil), t(x, nil, t(x, nil, nil)))
+%% > T = t(x, t(x, nil, nil), t(x, t(x, nil, nil) nil)))
+%% =============================================================================
+%%
+%% A balanced binary tree with four nodes comes in 4 permutations:
+%%
+%%  Permutation 1
+%%  ------------- 
+%%      x
+%%     / \ 
+%%    x   x
+%%         \ 
+%%          x
+%%
+%%  Permutation 2
+%%  ------------- 
+%%      x
+%%     / \
+%%    x   x
+%%       /
+%%      x 
+%%
+%%  Permutation 3
+%%  ------------- 
+%%      x
+%%     / \
+%%    x   x
+%%     \   
+%%      x
+%%
+%%  Permutation 4
+%%  ------------- 
+%%      x 
+%%     / \
+%%    x   x
+%%   /     
+%%  x  
+%%
+
+%% 
+%% Suppose we wish to construct a balanced tree of height h. We could 
+%% accomplish this by starting with a root node 'x', and adding a balanced
+%% tree of height h-1 as the left branch, and a second balanced tree of 
+%% height h-1 as the right branch.
+%%
+%% This is the general heueristic we follow below.
+%%
+%% Note that a balanced tree of height h will have (roughly) twice as 
+%% many nodes as a balanced tree of height h-1.
+%%
+%% Note too that we must include in our result set all possible combinations
+%% of balanced trees of height h-1 on the left branch with all possible
+%% combinations of balanced trees of height h-1 on the right branch.
+%%
+-spec cbal_tree(N) -> List when 
+      N :: non_neg_integer(),
+      List :: [term()].
+
+cbal_tree(0) ->
+    [nil];
+cbal_tree(N) when N rem 2 =:= 1, N > 0 -> 
+    %% Branch when N is odd
+    Arg1 = round((N-1)/2),
+    cartesian_process(cbal_tree(Arg1), cbal_tree(Arg1));
+cbal_tree(N) when N rem 2 =:= 0, N > 0 ->
+    %% Branch when N is even
+    Arg1 = round((N-2)/2),
+    Arg2 = round(N/2),
+    cartesian_process(cbal_tree(Arg1), cbal_tree(Arg2)) ++
+	cartesian_process(cbal_tree(Arg2), cbal_tree(Arg1)).
+	
+process(List) when is_list(List) ->
+    lists:map(fun(X) -> [x] ++ X end, List).
+
+cartesian_product(List1, List2) when is_list(List1), is_list(List2) ->
+    [[X,Y] || X <- List1,
+	      Y <- List2].
+	       
+cartesian_process(List1, List2) when is_list(List1), is_list(List2) ->
+    process(cartesian_product(List1, List2)).
+
+%% =============================================================================
+%% @doc
+%% P56 (**) Symmetric binary trees
+%%
+%% Let us call a binary tree symmetric if you can draw a vertical line through 
+%% the root node and then the right subtree is the mirror image of the left
+%% subtree. Write a function 'symmetric' to check whether a given binary tree
+%% is symmetric. We are only interested in the structure, not in the contents
+%% of the nodes.
+%% @end
+%% =============================================================================
+-spec symmetric(Tree) -> boolean() when
+      Tree :: term() | [term()].
+
+symmetric(nil) ->
+    true;
+symmetric([_Root, nil, nil]) ->
+    true;
+symmetric([_Root, Left, Right]) ->
+    equal_structure(Left, revert(Right)).
+
+revert([]) ->
+    [];
+revert(nil) ->
+    nil;
+revert([Root, Left, Right]) ->
+    make_binary_tree(Root, revert(Right), revert(Left)).
+
+equal_structure([], []) ->
+    true;
+equal_structure(nil, nil) ->
+    true;
+equal_structure(_Tree, []) ->
+    false;
+equal_structure(_Tree, nil) ->
+    false;
+equal_structure([], _Tree) ->
+    false;
+equal_structure(nil, _Tree) ->
+    false;
+equal_structure([_Root1, Left1, Right1], [_Root2, Left2, Right2]) ->
+    equal_structure(Left1, Left2) and equal_structure(Right1, Right2).
+    
+%% ===========================================================================
+%% @doc
+%% P57 (**) Binary search trees (dictionaries)
+%%
+%% Write a function to construct a binary search tree from a list of integer
+%% numbers.
+%% @end
+%%
+%% Example:
+%% > (construct '(3 2 5 7 1))
+%% > (3 (2 (1 nil nil) nil) (5 nil (7 nil nil)))
+%%
+%% Then use this function to test the solution of P56.
+%% 
+%% Example:
+%% > (symmetric '(5 3 18 1 4 12 21))
+%% > true
+%% > (symmetric '(3 2 5 7 1))
+%% > true
+%% > (symmetric '(3 2 5 7))
+%% > false
+%% ===========================================================================
+-spec construct(List) -> Tree when 
+      List :: [term()],
+      Tree :: [term()].
+
+construct(List) when is_list(List) ->
+    construct(List,[]).
+
+construct([], Tree) ->
+    Tree;
+construct([H|T], Tree) ->
+    construct(T, best_add(H, Tree)).
+
+best_add(Item, []) ->
+    make_binary_tree(Item);
+best_add(Item, nil) ->
+    make_binary_tree(Item);
+best_add(Item, [Root, Left, Right]) when Item < Root ->
+    make_binary_tree(Root, best_add(Item, Left), Right);
+best_add(Item, [Root, Left, Right]) when Item > Root ->
+    make_binary_tree(Root, Left, best_add(Item, Right));
+best_add(_Item, Tree) ->
+    Tree.
+
+%% =============================================================================
+%% @doc
+%% P58 (**) Geneate-and-test paradigm.
+%%
+%% Apply the generate-and-test paradigm to construct all symmetric, completely
+%% balanced binary trees with a given number of nodes.
+%% @end
+%% 
+%% Example:
+%%
+%% > (sym-cbal-trees-print 5)
+%% (x (x nil (x nil nil)) (x (x nil nil) nil))
+%% (x (x (x nil nil) nil) (x nil (x nil nil)))
+%%
+%% How many such trees are there with 57 nodes? Investigate about how many 
+%% solutions there are for a given number of nodes. What if the number is 
+%% even?
+%% =============================================================================
+-spec sym_cbal_trees_print(N) -> any() when 
+      N :: non_neg_integer().
+
+sym_cbal_trees_print(N) when N >= 0 ->
+    CBalTrees = cbal_tree(N),
+    SymCBalTrees = lists:filter(fun (X) -> symmetric(X) end, CBalTrees),
+    Length = length(SymCBalTrees),
+    io:format("Number of Trees: ~p~n", [Length]),
+    sym_cbal_trees_print_iter(SymCBalTrees).
+
+sym_cbal_trees_print_iter([]) ->
+    io:format("");
+sym_cbal_trees_print_iter([H|T]) ->
+    Val1 = symmetric(H),
+    case Val1 of 
+	true ->
+	    io:format("~p~n", [H]),
+	    sym_cbal_trees_print_iter(T);
+	_ ->
+	    sym_cbal_trees_print_iter(T)
+    end.
+
+%%
+%% There are 256 symmetric, completely balanced trees with 57 nodes.
+%%
+%% The following is a table of the number of solutions for a given number
+%% a given number of nodes:
+%%
+%% --------------------- 
+%% | Nodes | Solutions |
+%% --------------------- 
+%% |   0   |     1     | 
+%% |   1   |     1     |
+%% |   2   |     0     |
+%% |   3   |     1     |
+%% |   4   |     0     |
+%% |   5   |     2     |
+%% |   6   |     0     |
+%% |   7   |     1     |
+%% |   8   |     0     |
+%% |   9   |     4     |
+%% |  10   |     0     |
+%% ---------------------
+%%
+%% With the exception of N=0, there are no solutions when the number of 
+%% nodes is even. 
+%%
+%% A general pattern can be deduced as follows: Suppose the number of nodes
+%% in the tree is 2^n + 1. Then there will be 2^(n-1) solutions. This is 
+%% expressed in the following table:
+%%
+%% -----------------------------------------
+%% | Number of Nodes | Number of Solutions |
+%% -----------------------------------------
+%% |       5         |          2          |
+%% |       9         |          4          |
+%% |      17         |          8          |
+%% |      33         |         16          |
+%% |      65         |         32          |
+%% |     129         |         64          |
+%% -----------------------------------------
+%%  
+
+%% ===========================================================================
+%% @doc
+%% P59 (**) Construct height-balanced binary trees
+%%
+%% In a height-balanced binary tree, the following property holds for every
+%% node: The height of its left subtree and the height of its right subtree
+%% are almost equal, which means their difference is not greater than one.
+%%
+%% Write a fnuction 'hbal-tree' to construct height-balanced binary trees
+%% for a given height. The function should generate all solutions. Put the 
+%% letter 'x' as information into all nodes of the tree.
+%% @end
+%%
+%% Example:
+%% > (hbal-tree 3)
+%% (X (X (X NIL NIL) (X NIL NIL)) (X (X NIL) (X NIL NIL)))
+%% = (X (X (X NIL NIL) (X NIL NIL)) (X (X NIL NIL) NIL))
+%% ===========================================================================
+-spec hbal_tree(N) -> List when
+      N :: non_neg_integer(),
+      List :: [term()].
+
+hbal_tree(0) ->
+    [make_binary_tree()];
+hbal_tree(1) ->
+    [make_binary_tree(x)];
+hbal_tree(N) when N > 1 ->
+    Tree1 = hbal_tree(N-1),
+    Tree2 = hbal_tree(N-2),
+    cartesian_process(Tree1, Tree2) ++
+	cartesian_process(Tree1, Tree1) ++
+	cartesian_process(Tree2, Tree1).
+
+%% =============================================================================
+%% @doc
+%% P60 (**) Construt height-balanced binary trees with a given number of nodes
+%%
+%% Consider a height-balanced tree of height H. What is the maximum number of 
+%% nodes it can contain? Clearly, MAX N = 2**H - 1. However, what is the minimum
+%% number of nodes? This question is more difficult. Try to find a recursive
+%% statement and turn it into a function minnodes defined as follows:
+%%
+%% (min-nodes H) returns the minimum number of nodes in a height-balanced binary
+%% tree of height H.
+%%
+%% On the other hand, we might ask: what is the maximum height of a height-
+%% balanced binary tree with N nodes?
+%%
+%% (max-height N) returns the maximum height of a height-balanced binary tree
+%% with N nodes.
+%%
+%% Now we can attack the main problem: construct all the height-balanced binary
+%% trees with a given number of nodes.
+%%
+%% (hbal-tree-nodes N) returns all height-balanced binary trees with N nodes.
+%%
+%% Find out how many height-balanced binary trees exist for N = 15.
+%% @end
+%% =============================================================================
+
+%%
+%% Helper 'ceiling' function.
+%% 
+-spec ceiling(Float) -> Integer when
+      Float :: float() | integer(),
+      Integer :: integer().
+
+ceiling(X) ->
+    T = erlang:trunc(X),
+    case (X-T) of
+	Neg when Neg < 0 -> T;
+	Pos when Pos > 0 -> T + 1;
+	_ -> T
+    end.
+
+%%
+%% Helper 'floor' function.
+%%
+-spec floor(Float) -> Integer when
+      Float :: float() | integer(),
+      Integer :: integer().
+
+floor(X) ->
+    T = erlang:trunc(X),
+    case (X-T) of
+	Neg when Neg < 0 -> T - 1;
+	Pos when Pos > 0 -> T;
+	_ -> T
+    end.
+
+%%
+%% This procedure counts the minimum number of nodes that a height-balanced
+%% tree of height H may have.
+%%
+-spec min_nodes(N) -> N when 
+      N :: non_neg_integer().
+
+min_nodes(0) ->
+    0;
+min_nodes(1) ->
+    1;
+min_nodes(H) when H > 1 ->
+    min_nodes(H-1) + min_nodes(H-2) + 1.
+
+%%
+%% This procedure counts the maximum number of nodes that a height-balanced
+%% tree of height H may have.
+%%
+-spec max_nodes(N) -> N when 
+      N :: non_neg_integer().
+
+max_nodes(H) when H >= 0 ->
+    round(math:pow(2,H) - 1).
+
+%%
+%% This procedure returns the minimum height that a height-balanced tree with 
+%% N nodes may have. (this height calculation is still wrong)
+%%
+-spec min_height(N) -> N when 
+      N :: non_neg_integer().
+
+min_height(N) when N >= 0 ->
+    ceiling(math:log(N+1) / math:log(2)).
+
+%%
+%% Helper function for calculating 'max_height' below.
+%%    
+-spec node_counter(N) -> N when
+      N :: non_neg_integer().
+
+node_counter(0) ->
+    0;
+node_counter(1) ->
+    1;
+node_counter(N) when N > 1 ->
+    node_counter(N-1) + node_counter(N-2) + 1.
+
+%% 
+%% This procedure returns the maximum height that a height-balanced tree with
+%% N nodes may have.
+%%
+-spec max_height(N) -> N when
+      N :: non_neg_integer().
+
+max_height(0) ->
+    0;
+max_height(1) ->
+    1;
+max_height(N) when N > 1 ->
+    max_height(N,1).
+
+max_height(N,H) ->
+    Nodes = node_counter(H),
+    case Nodes of
+	Less when Less < N -> max_height(N,H+1);
+	Greater when Greater > N -> H-1;
+	_ -> H
+    end.
+
+%%
+%% This procedure counts the total number of nodes in a tree.
+%%
+-spec count_nodes(Tree) -> N when 
+      Tree :: term() | [term()],
+      N :: non_neg_integer().
+
+count_nodes([]) ->
+    0;
+count_nodes(nil) ->
+    0;
+count_nodes([_Root, nil, nil]) ->
+    1;
+count_nodes([_Root, Left, Right]) ->
+    count_nodes(Left) + count_nodes(Right) + 1.
+    
+%%
+%% Finally, the actual procedure that generates the list of height-balanced
+%% trees with the requisite number of Nodes. The procedure works as follows:
+%%
+%%  1) Determine the height of the shortest hbal tree containing 'Nodes' nodes.
+%%  2) Determine the height of the tallest hbal tree containing 'Nodes' nodes.
+%%  3) Build a range of heights bounded by these two values.
+%%  4) Generate the list of all trees containing these heights, flatten as 
+%%     needed.
+%%  5) Filter the resulting list, retaining only those trees with the correct
+%%     number of nodes.
+%%
+-spec hbal_tree_nodes(N) -> [Tree] when
+      N :: non_neg_integer(),
+      Tree :: term() | [term()].
+
+hbal_tree_nodes(Nodes) when Nodes >= 0 ->
+    Heights = lists:seq(min_height(Nodes), max_height(Nodes)),
+    Trees = lists:map(fun p99:hbal_tree/1, Heights),
+    FlatTrees = lists:foldr(fun(X, List) -> X ++ List end, [], Trees),
+    lists:filter( fun(Tree) -> count_nodes(Tree) =:= Nodes end, FlatTrees).
+	
+%%
+%% There are 1,553 height-balanced trees with 15 nodes.
+%%
+		   
+%% ==========================================================================
+%% @doc
+%% P61 (*) Count the leaves of a binary tree.
+%%
+%% A leaf is a node with no successors.
+%%
+%% Write a function 'count-leaves' to count them.
+%%
+%% (count-leaves tree) returns the number of leaves of a binary tree 'tree'.
+%% @end
+%% ==========================================================================
+-spec count_leaves(Tree) -> non_neg_integer() when 
+      Tree :: term() | [term()].
+
+count_leaves(nil) ->
+    0;
+count_leaves([_Root, nil, nil]) -> 
+    1;
+count_leaves([_Root, Left, Right]) -> 
+    count_leaves(Left) + count_leaves(Right).
+
+%% ========================================================================
+%% @doc
+%% P61A (*) Collect the leaves of a binary tree in a list.
+%%
+%% A leaf is a node with no successors.
+%%
+%% Write a function 'leaves' to return them in a list.
+%%
+%% (leaves tree) returns the list of all leaves of the binary tree 'tree'.
+%% @end
+%% ========================================================================
+-spec leaves(Tree) -> List when 
+      Tree :: term() | [term()],
+      List :: [term()].
+
+leaves(nil) ->
+    [];
+leaves([Root, nil, nil]) ->
+    [Root];
+leaves([_Root, Left, Right]) ->
+    leaves(Left) ++ leaves(Right).
+
+%% =============================================================================
+%% @doc
+%% P62 (*) Collect the internal nodes of a binary tree in a list.
+%%
+%% An internal node of a binary tree has either one or two non-empty successors.
+%%
+%% Write a function 'internals' to collect them in a list.
+%%
+%% (internals tree) returns the list of internal nodes of the binary tree 'tree'.
+%% @end
+%% ==============================================================================
+-spec internals(Tree) -> List when
+      Tree :: term() | [term()],
+      List :: [term()].
+
+internals(nil) ->
+    [];
+internals([_Root, nil, nil]) ->
+    [];
+internals([Root, Left, Right]) ->
+    [Root] ++ internals(Left) ++ internals(Right).
+
+%% ============================================================================
+%% @doc
+%% P62B (*) Collect the nodes at a given level in a list.
+%%
+%% A node of a binary tree is at level N if the path from the root to the node
+%% has length N-1. The root node is at level 1. Write a function 'atlevel' to 
+%% collect all nodes at a given level in a list.
+%%
+%% (atlevel tree L) return the list of nodes of the binary tree 'tree' at 
+%% Level 'L'.
+%%
+%% Using 'atlevel' it is easy to construct a function 'levelorder' which 
+%% creates the level-order sequence of the nodes. However, there are more
+%% efficient ways to do that.
+%% @end
+%% ============================================================================
+-spec at_level(Tree, pos_integer()) -> List when
+      Tree :: [term()],
+      List :: [term()].
+
+at_level(nil, _Level) -> 
+    [];
+at_level([Root, _Left, _Right], 1) ->
+    [Root];
+at_level([_Root, Left, Right], Level) ->
+    at_level(Left, Level-1) ++ at_level(Right, Level-1).
+
+%% =============================================================================
+%% @doc
+%% P63 (**) Construct a complete binary tree.
+%%
+%% A complete binary tree with height H is defined as follows: the levels
+%% 1,2,3,...,H-1 contain the maximum number of nodes (i.e., 2**(i-1) at the 
+%% level i, note that we start counting the levels from 1 at the root). 
+%% In level H, which may contain less than the maximum possible number of 
+%% nodes, all the nodes are "left-adjusted". This means that in a levelorder
+%% tree traversal all internal nodes come first, the leaves come second, and 
+%% empty successors (the nils which are not really nodes) come last.
+%%
+%% Particularly, complete binary trees are used as data structures (or 
+%% addressing schemes) for heaps.
+%%
+%% We can assign an address number to each node in a complete binary tree by
+%% enumerating the nodes in levelorder, starting at the root with number 1.
+%% In doing so, we realize that for every node X with address A the following 
+%% property holds: The address of X's left and right successors are 2*A and 
+%% 2*A + 1, respectively, suppossing that the successors do exist. This fact
+%% can be used to elegantly construct binary tree structures. Write a function
+%% complete-binary-tree with the following specification:
+%%
+%% (complete-binary-tree N) returns a complete binary tree with N nodes.
+%%
+%% Test your function in an appropriate way.
+%% @end
+%% =============================================================================
+-spec complete_binary_tree(N) -> Tree when
+      N :: non_neg_integer(),
+      Tree :: term() | [term()].
+
+complete_binary_tree(N) when N >= 0 ->
+    cbtree_label(N, 1).
+
+cbtree_label(0, _) ->
+    make_binary_tree();
+cbtree_label(1, K) ->
+    make_binary_tree(K);
+cbtree_label(N, K) ->
+    P = floor( highest_2_power(N) / 2 ),
+    P2 = floor(N/P),
+    case P2 =:= 2 of
+	true -> Left = P + (N rem P);
+	false -> Left = 2 * P - 1
+    end,
+    make_binary_tree(K,
+		     cbtree_label(Left, 2 * K),
+		     cbtree_label(N - Left - 1, 2 * K + 1)).
+
+%%
+%% Highest power of 2 which is less than or equal to N
+%%
+highest_2_power(1) ->
+    1;
+highest_2_power(N) when N > 1 ->
+    2 * highest_2_power( floor(N/2) ).
+
+%%
+%% Helper function to test whether Tree is a complete binary tree.
+%%
+%% Validates (i) the complete binary tree property, and (ii) whether 
+%% or not the sub-branches similarly are binary trees.
+%%
+-spec is_complete_binary_tree(Tree) -> boolean() when
+      Tree :: term() | [term()].
+
+is_complete_binary_tree(nil) ->    
+    true;
+is_complete_binary_tree([_Root, nil, nil]) -> 
+    true;
+is_complete_binary_tree([Root, [H1|T1], nil]) ->
+    (2 * Root =:= H1) and
+	is_complete_binary_tree([H1|T1]);
+is_complete_binary_tree([Root, [H1|T1], [H2|T2]]) ->
+    (2 * Root =:= H1) and
+	(2 * Root + 1 =:= H2) and
+	is_complete_binary_tree([H1|T1]) and
+	is_complete_binary_tree([H2|T2]).
+
+%% =============================================================================
+%% @doc
+%% P64 (**) Layout a binary tree (1)
+%%
+%% Consider a binary tree as the usual symbolic express (X L R) or nil. As a
+%% preparation for drawing the tree, a layout algorithm is required to determine
+%% the position of each node in a rectangular grid. Several layout methods are 
+%% conceivable, one of them is shown in the illustration below.
+%%
+%% In this layout strategy, the position of a node v is obtained by the following
+%% two rules:
+%%
+%% (1) x(v) is equal to the position of the node in the inorder sequence.
+%% (2) y(y) is equal to the depth of the node v in the tree.
+%%
+%% In order to store the position of the nodes, we extend the symbolic
+%% expression representing a node (and its successor) as follows:
+%%
+%% (*) nil represents the empty tree (as usual)
+%% (*) (W X Y L R) represents a (non-empty) binary tree with root W "positioned"
+%% at (X,Y) and subtress L and R.
+%%
+%% Write a function layout-binary-tree with the following specification:
+%%
+%% (layout-binary-tree tree) returns the "positioned" binary tree obtained 
+%% from the binary tree 'tree'.
+%% @end
+%% =============================================================================
+
+%%
+%% OK, so I read the question wrong(!)
+%% 
+%% What I've generated below are procedures for actually drawing the graphs, 
+%% when in fact all that is requested is a procedure for alterating the data
+%% structure used to represent the graph.
+%%
+%% The code (immediately) below is the drawing code, and the requested data
+%% structure modification code follows:
+%%
+
+%%
+%% Counting the nodes will give us the "width" of the graph.
+%% 
+%% Determining the depth of the tree will give us the "height" of the graph.
+%% 
+count_depth(nil) ->
+    0;
+count_depth([_Root, Left, Right]) ->
+    LeftDepth = count_depth(Left),
+    RightDepth = count_depth(Right),
+    case LeftDepth > RightDepth of
+	true -> LeftDepth + 1;
+	false -> RightDepth + 1
+    end.
+
+-spec print_binary_tree(Tree) -> no_return() when
+      Tree :: term() | [term()].
+
+print_binary_tree(nil) ->
+    io:format("");    
+print_binary_tree(Tree) ->
+    Width = count_nodes(Tree),
+    Height = count_depth(Tree),
+    TreeList = binary_tree_process_tree_by_x(Tree,1),
+    io:format("+~s+~n", [string:copies("-", Width)]),
+    print_binary_tree_rows(TreeList, Width, Height),
+    io:format("+~s+~n", [string:copies("-", Width)]).
+
+%%
+%% Perform in-order walk on the tree.
+%%
+%% Return a list of the node tuples. A node tuple contains the node label 
+%% at that point as well as the depth of the node. The nodes in the list
+%% are sorted according to the "in-order walk" metric, so that the ordering
+%% of the nodes can be used to determine the x-coordinate of the node in the 
+%% graph. In turn, the "depth" of the node is used to determine the y-
+%% coordinate of the node in the graph.
+%%
+%% For instance, consider the following binary tree:
+%%
+%% [a,[b,[d,nil, nil],[e, nil, nil]],[c,nil,[f,[g,nil,nil],nil]]]
+%%
+%% When this structure is passed to this method, it returns:
+%%
+%% [{d,3},{b,2},{e,3},{a,1},{c,2},{g,4},{f,3}]
+%%
+%% When displayed as a graph, this structure looks like:
+%%
+%% +-------+
+%% |   a   |
+%% | b  c  |
+%% |d e   f|
+%% |     g |
+%% +-------+
+%%
+binary_tree_process_tree_by_x(nil, _Depth) ->
+    [];
+binary_tree_process_tree_by_x([Root, nil, nil], Depth) ->
+    [{Root,Depth}];
+binary_tree_process_tree_by_x([Root, Left, Right], Depth) ->
+    binary_tree_process_tree_by_x(Left, Depth+1) ++
+	[{Root,Depth}] ++
+	binary_tree_process_tree_by_x(Right, Depth+1).
+
+%%
+%% Row APIs
+%%
+print_binary_tree_rows(TreeList, W, H) ->
+    print_binary_tree_rows(TreeList, W, H, 1).
+
+print_binary_tree_rows(Tree, W, H, H) ->
+    print_binary_tree_print_row(Tree, W, 1, H);
+print_binary_tree_rows(Tree, W, H, Y) when Y < H ->
+    print_binary_tree_print_row(Tree, W, 1, Y),
+    print_binary_tree_rows(Tree, W, H, Y+1).
+
+print_binary_tree_print_row(Tree, W, X, Y) ->
+    io:format("|"),
+    print_binary_tree_cols(Tree, W, X, Y),
+    io:format("|~n").
+
+%%
+%% Column and Node APIs
+%%
+print_binary_tree_cols(Tree, W, W, Y) ->
+    print_binary_tree_print_node(Tree, W, Y);
+print_binary_tree_cols(Tree, W, X, Y) when X < W ->
+    print_binary_tree_print_node(Tree, X, Y),
+    print_binary_tree_cols(Tree, W, X+1, Y).
+
+print_binary_tree_print_node(Tree, X, Y) ->
+    Node = lists:nth(X, Tree),
+    case Node of 
+	{Val, Y} -> io:format("~p", [Val]);
+	_ -> io:format(" ")
+    end.
+
+%% 
+%% We can test the procedure with the following structures:
+%%
+%% [a,nil,nil]
+%%
+%% +-+
+%% |a|
+%% +-+
+%%
+%% [a,[b,[d,nil,nil],[e,nil,nil]],[c,nil,[f,[g,nil,nil],nil]]]
+%%
+%% +-------+
+%% |   a   |
+%% | b  c  |
+%% |d e   f|
+%% |     g |
+%% +-------+
+%%
+%% [a,[b,nil,nil],nil]
+%%
+%% +--+
+%% | a|
+%% |b |
+%% +--+
+%%
+%% [n,
+%%  [k,[c,[a,nil,nil],[e,[d,nil,nil],[g,nil,nil]]],[m,nil,nil]],
+%%  [u,[p,nil,[q,nil,nil]],nil]]
+%%
+%% +-----------+
+%% |       n   |
+%% |     k    u|
+%% | c    m p  |
+%% |a  e     q |
+%% |  d g      |
+%% +-----------+
+%%
+%% [o,
+%%  [m,[i,[a,nil,nil],[b,nil,nil]],[j,[c,nil,nil],[d,nil,nil]]],
+%%  [n,[k,[e,nil,nil],[f,nil,nil]],[l,[g,nil,nil],[h,nil,nil]]]]
+%%
+%% +---------------+
+%% |       o       |
+%% |   m       n   |
+%% | i   j   k   l |
+%% |a b c d e f g h|
+%% +---------------+
+%%
+%% A complete binary tree with 8 nodes:
+%%
+%% [1,
+%%  [2,[4,[8,nil,nil],nil],[5,nil,nil]],
+%%  [3,[6,nil,nil],[7,nil,nil]]]
+%%
+%% +--------+
+%% |    1   |
+%% |  2   3 |
+%% | 4 5 6 7|
+%% |8       |
+%% +--------+
+%%
+
+%%
+%% Now, to answer the original question:
+%%
+-spec layout_binary_tree(Tree) -> Tree when
+      Tree :: term() | [term()].
+
+layout_binary_tree(Tree) ->
+    TreeList = binary_tree_process_tree_by_x(Tree,0),
+    layout_binary_tree(Tree, TreeList).
+
+layout_binary_tree([], _TreeList) ->
+    [];
+layout_binary_tree([Root, nil, nil], TreeList) ->
+    X = layout_binary_tree_lookup_x(Root, TreeList),
+    Y = layout_binary_tree_lookup_y(Root, TreeList),
+    [Root, X, Y, nil, nil];
+layout_binary_tree([Root, Left, nil], TreeList) ->
+    X = layout_binary_tree_lookup_x(Root, TreeList),
+    Y = layout_binary_tree_lookup_y(Root, TreeList),
+    [Root, X, Y, layout_binary_tree(Left, TreeList), nil];
+layout_binary_tree([Root, nil, Right], TreeList) ->
+    X = layout_binary_tree_lookup_x(Root, TreeList),
+    Y = layout_binary_tree_lookup_y(Root, TreeList),
+    [Root, X, Y, nil, layout_binary_tree(Right, TreeList)];
+layout_binary_tree([Root, Left, Right], TreeList) ->
+    X = layout_binary_tree_lookup_x(Root, TreeList),
+    Y = layout_binary_tree_lookup_y(Root, TreeList),
+    [Root, X, Y, layout_binary_tree(Left, TreeList), layout_binary_tree(Right, TreeList)].
+
+%%
+%% Lookup x-coord of an atom in the list
+%%
+layout_binary_tree_lookup_x(Atom, List) ->
+    layout_binary_tree_lookup_x(Atom, List, 1).
+
+layout_binary_tree_lookup_x(_Atom, [], _X) ->
+    -1; %% <-- error condition
+layout_binary_tree_lookup_x(Atom, [{Atom,_Y}|_T], X) ->
+    X;
+layout_binary_tree_lookup_x(Atom, [_H|T], X) ->
+    layout_binary_tree_lookup_x(Atom, T, X+1).
+
+%% 
+%% Lookup y-coord of an atom in the list
+%%
+layout_binary_tree_lookup_y(_Atom, []) ->
+    -1; %% <-- error condition
+layout_binary_tree_lookup_y(Atom, [{Atom,Y}|_T]) ->
+    Y;
+layout_binary_tree_lookup_y(Atom, [_H|T]) ->
+    layout_binary_tree_lookup_y(Atom, T).
+
+%% =============================================================================
+%% @doc
+%% P67 (**) A string representation of binary trees.
+%%
+%% Somebody represents binary trees as strings of the following type (see
+%% example opposite):
+%%
+%% a(b(d,e),c(,f(g,)))
+%%
+%% (a) Write a list function which generates this string, if the tree is given
+%%     as usual (as nil or (X L R)). Then write a function which does the 
+%%     inverse, i.e., given the string representation, construct the tree in 
+%%     the usual form.
+%%
+%% @end
+%% =============================================================================
+-spec binary_tree_to_string(Tree) -> String when
+      Tree :: term() | [term()],
+      String :: [term()].
+
+binary_tree_to_string(Tree) ->
+    lists:concat(binary_tree_to_string_rec(Tree)).
+
+binary_tree_to_string_rec(nil) ->
+    "";
+binary_tree_to_string_rec([Root, nil, nil]) ->
+    [Root];
+binary_tree_to_string_rec([Root, Left, Right]) ->
+    [Root] ++ 
+	["("] ++ binary_tree_to_string_rec(Left) ++ 
+	[","] ++ binary_tree_to_string_rec(Right) ++ 
+	[")"].
+
+-spec string_to_binary_tree(String) -> Tree when
+      String :: [term()],
+      Tree :: term() | [term()].
+
+string_to_binary_tree(_String) ->
+    todo.
+
+%% =============================================================================
+%% @doc
+%% P68 (**) Preorder and inorder sequences of binary trees.
+%%
+%% We consider binary trees with nodes that are identified by single lower-case 
+%% letters, as in the example of problem B67.
+%%
+%% a) Write functions preorder and inorder that construct the preorder and
+%%    inorder sequence of a given binary tree, respectively. The results should
+%%    be lists, e.g., (A B D E C F G) for the preorder sequence of the example 
+%%    in P67.
+%%
+%% b) Can you write the inverse of preorder from problem part a), i.e., given 
+%%    a preorder sequence, construct a corresponding tree?
+%%
+%% c) If both the preorder sequence and the inorder sequence of the nodes of a 
+%%    binary tree are given, then the tree is determined unambiguously. Write a 
+%%    function pre-in-tree that does the job.
+%% @end
+%% =============================================================================
+-spec preorder(Tree) -> List when
+      Tree :: term() | [term()],
+      List :: [term()].
+
+preorder([Root, nil, nil]) ->
+    [Root];
+preorder([Root, Left, nil]) ->
+    [Root] ++ preorder(Left);
+preorder([Root, nil, Right]) ->
+    [Root] ++ preorder(Right);
+preorder([Root, Left, Right]) ->
+    [Root] ++ preorder(Left) ++ preorder(Right).
+
+-spec inorder(Tree) -> List when
+      Tree :: term() | [term()],
+      List :: [term()].
+
+inorder([Root, nil, nil]) ->
+    [Root];
+inorder([Root, Left, nil]) ->
+    inorder(Left) ++ [Root];
+inorder([Root, nil, Right]) ->
+    [Root] ++ inorder(Right);
+inorder([Root, Left, Right]) ->
+    inorder(Left) ++ [Root] ++ inorder(Right).
+
+%%
+%% In answer to question (b), no we cannot write the inverse of preorder, since
+%% the inverse mapping is not unique. That is, more than one binary tree can 
+%% generate the same preorder list sequence.
+%%
+%% For instance, consider the following trees:
+%%
+%%  A = [a, [b, [c, [d, nil, nil], nil], nil], nil].
+%%  B = [a, nil, [b, nil, [c, nil, [d, nil, nil]]]].
+%%
+%% Both of these binary trees have the same preorder sequence:
+%%
+%% > preorder(A).
+%% ==> [a, b, c, d]
+%%
+%% > preorder(B).
+%% ==> [a, b, c, d]
+%%
+%% Note, however, that their inorder sequences differ:
+%%
+%% > inorder(A).
+%% ==> [d, c, b, a]
+%%
+%% > inorder(B).
+%% ==> [a, b, c, d]
+%%
+
+%%
+%% We can change this by adding a token for an empty tree, e.g., a ".":
+%%
+-spec full_preorder(Tree) -> List when
+      Tree :: term() | [term()],
+      List :: [term()].
+
+full_preorder(nil) ->
+    ".";
+full_preorder([Root, Left, Right]) when is_atom(Root) ->
+    atom_to_list(Root) ++ full_preorder(Left) ++ full_preorder(Right);
+full_preorder([Root, Left, Right]) when is_integer(Root) ->
+    integer_to_list(Root) ++ full_preorder(Left) ++ full_preorder(Right).
+
+%%
+%% Now, for instance, we have:
+%%
+%% > full_preorder(A).
+%% ==> abcd.....
+%%
+%% > full_preorder(B).
+%% ==> a.b.c.d..
+%%
+
+%%
+%% With this data representation, we can build a binary tree from a full 
+%% pre-ordering as follows:
+%%
+-spec pre_full_tree(String) -> Tree when
+      String :: [term()],
+      Tree :: term() | [term()].
+
+pre_full_tree(String) ->
+    pre_full_tree_stream(string_stream(String)).
+
+pre_full_tree_stream(Stream) ->
+    string_stream_next(Stream),
+    receive
+	{next, Value} ->
+	    case Value of
+		"." ->
+		    %% Terminate recursion
+		    make_binary_tree();
+		_ ->
+		    %% Helper function to support both strings and integers
+		    HeadValue = hd(Value),
+		    ConvertValue = fun() when HeadValue >= 49, HeadValue =< 57 ->
+					   list_to_integer(Value);
+				      () ->
+					   list_to_atom(Value)
+				   end,
+		    
+		    %% Recursive call
+		    make_binary_tree(ConvertValue(),
+				     pre_full_tree_stream(Stream),
+				     pre_full_tree_stream(Stream))
+	     end;
+	_ ->
+	    %% Default case (shouldn't hit here, though)
+	    ok
+    end.
+
+%%
+%% Supporting "string stream" procedures, implemented as PIDs.
+%%       
+-spec string_stream(String) -> pid() when
+      String :: [term()].
+
+string_stream(Value) ->
+    spawn(fun() -> string_stream_make(Value) end).
+
+%%
+%% A "string stream" supports two messages:
+%%
+%%  1. value -> report the present "full" value of the string.
+%%  2. next -> return the first character in the stream, and increment forward.
+%%
+string_stream_make(Value) ->
+    receive
+	{value, Pid} ->
+	    Pid ! {value, Value},
+	    string_stream_make(Value);
+	{next, Pid} ->
+	    Length = length(Value),
+	    case Length of 
+		0 ->
+		    Pid ! {next, []};
+		_ ->
+		    NewValue = string:substr(Value,2),
+		    Pid ! {next, [hd(Value)]},
+		    string_stream_make(NewValue)
+            end
+    end.
+
+-spec string_stream_value(Pid) -> no_return() when
+      Pid :: pid().
+string_stream_value(Pid) ->
+    Pid ! {value, self()}.
+
+-spec string_stream_next(Pid) -> no_return() when
+      Pid :: pid().
+string_stream_next(Pid) ->
+    Pid ! {next, self()}.
+
+%%
+%% TODO --> part (c)
+%%
+-spec pre_in_tree(PreOrderList, InOrderList) -> Tree when
+      PreOrderList :: [term()],
+      InOrderList :: [term()],
+      Tree :: term() | [term()].
+
+pre_in_tree(_PreOrder,_InOrder) ->
+    todo.
+
+%% =============================================================================
+%% @doc
+%% P69 (**) Dotstring representation of binary trees.
+%%
+%% We consider again binary trees with nodes that are identified by single 
+%% lower-case letters, as in the example of problem P67. Such a tree can be 
+%% represented by the preorder sequence of its nodes in which dots (.) are 
+%% inserted where an empty subtree (nil) is encountered during the tree 
+%% traversal. For example, the tree shown in P67 is represented as 
+%% "ABD..E..C.FG...". First, try to establish a syntax (BNF or syntax diagrams)
+%% and then write functions tree and dotstring which do the conversion.
+%% @end
+%% =============================================================================
+
+%%
+%% This problem has already been solved(!)
+%%
+%% The 'full_preorder' procedure takes a binary tree and converts it to the
+%% "dotstring" syntax representation.
+%%
+%% The 'pre_full_tree' procedure takes a "dotstring" syntax representation and 
+%% converts it to a binary tree.
+%%
+
+%%
+%% ========================== 
+%%  PART V -- MULTIWAY TREES
+%% ==========================
+%%
+
+%% ===========================================================================
+%% @doc
+%% P70B (*) Check whether a given expression represents a multiway tree.
+%%
+%% Write a function 'istree' which succeeds if and only if its argument is a
+%% Lisp expression representing a multiway tree.
+%% @end
+%%
+%% Example:
+%% > (istree '(a (f g) c (b d e)))
+%% > true
+%% ===========================================================================
+
+%%
+%% The problem is more subtle than might at first appear. 
+%%
+%% What we're really trying to guard against are cases where the first element
+%% in the list is itself a list, i.e., cases where for instance [[a, b],c], or
+%% for that matter, [a,[[b,c],d]], which are NOT examples of valid multiway 
+%% trees.
+%%
+%% Knowing this, we can design the predicate as follows:
+%%
+-spec is_multi_tree(Tree) -> boolean() when 
+      Tree :: term() | [term()].
+
+is_multi_tree([H|_T]) when is_list(H) ->
+    false;
+is_multi_tree(Tree) ->
+    is_multi_tree_rec(Tree).
+
+is_multi_tree_rec([]) ->
+    true;
+is_multi_tree_rec(X) when is_atom(X); is_number(X)->
+    true;
+is_multi_tree_rec([H|T]) when is_atom(H); is_number(H) ->
+    is_multi_tree_rec(T);
+is_multi_tree_rec([H|T]) when is_list(H) ->
+    is_multi_tree(H) and is_multi_tree_rec(T).
+
+%% 
+%% Some helper methods for the multitree section:
+%%
+make_multi_tree(0) ->
+    [];
+make_multi_tree(1) ->
+    a;
+make_multi_tree(2) ->
+    b;
+make_multi_tree(3) ->
+    1;
+make_multi_tree(4) ->
+    [a];
+make_multi_tree(5) ->
+    [1];
+make_multi_tree(6) ->
+    [a, b];
+make_multi_tree(7) ->
+    [a, [b, c]];
+make_multi_tree(8) ->
+    [b, d, e];
+make_multi_tree(9) ->
+    [a, [f, g], c, [b, d, e]];
+make_multi_tree(10) ->
+    [a, [f, g], [b, d, e]];
+make_multi_tree(11) ->
+    [a, [b, [c, d]]];
+make_multi_tree(12) ->
+    [a, [b, [c, [d, e]]]].
+
+%%
+%% The following methods generate "false" multiway trees, which should fail 
+%% the predicate defined above:
+%%
+make_multi_tree_fake(1) ->
+    [[a,b],c];
+make_multi_tree_fake(2) ->
+    [a,[[b,c],d]].
+
+%% ===========================================================================
+%% @doc
+%% P70C (*) Count the nodes of a multiway tree.
+%%
+%% Write a function nnodes which counts the nodes of a given multiway tree.
+%% @end
+%%
+%% Example:
+%% > (nnodes '(a f))
+%% > 2
+%% ===========================================================================
+-spec nnodes(Tree) -> non_neg_integer() when 
+      Tree :: term() | [term()].
+
+nnodes([]) ->
+    0;
+nnodes(X) when is_atom(X); is_number(X) ->
+    1;
+nnodes([H|T]) when is_atom(H); is_number(H) ->
+    nnodes(T) + 1;
+nnodes([H|T]) when is_list(H) ->
+    nnodes(H) + nnodes(T).
+
+%% ===
+%% @doc
+%% P70 (**) Tree construction from a node string.
+%% 
+%% TODO
+%% @end
+%% ====
+
+multi_tree_2_string(_Tree) ->
+    todo.
+
+%% THIS IS WRONG
+%%multi_tree_2_string(Tree) ->
+%%    multi_tree_2_string(Tree, [], 0).
+
+%%multi_tree_2_string([], Acc, 0) ->
+%%    lists:concat(Acc);
+%%multi_tree_2_string([], Acc, Depth) when Depth > 0 ->
+%%    multi_tree_2_string([], Acc ++ ["^"], Depth-1);
+%%multi_tree_2_string(X, Acc, Depth) when is_atom(X); is_number(X) ->
+%%    multi_tree_2_string([], Acc ++ [X], Depth+1);
+%%multi_tree_2_string([H|T], Acc, Depth) when is_atom(H); is_number(H) ->
+%%    multi_tree_2_string(T, Acc ++ [H], Depth+1);
+%%multi_tree_2_string([H|T], Acc, Depth) when is_list(H) ->
+%%    Val1 = multi_tree_2_string(H, [], 0),
+%%    multi_tree_2_string(T, Acc ++ Val1 ++ ["^"], Depth+1).
+
+%% =============================================================================
+%% @doc
+%% P71 (*) Determine the internal path length of a tree.
+%%
+%% We define the internal path length of a multiway tree as the total sum of 
+%% the path lengths from the root to all nodes of the tree. By this definition,
+%% the tree in the figure of P70 has an internal path length of 9. Write a 
+%% function (ipl tree) to compute it.
+%% @end
+%% =============================================================================
+
+ipl([]) ->
+    0;
+ipl(X) when is_atom(X); is_number(X) ->
+    0;
+ipl([_H|T]) ->
+    ipl_recur(T, 1).
+
+ipl_recur([], _Depth) ->
+    0;
+ipl_recur([H|T], Depth) when is_atom(H); is_number(H) ->
+    ipl_recur(T, Depth) + Depth;
+ipl_recur([H|T], Depth) when is_list(H) ->
+    ipl_recur(tl(H), Depth+1) + ipl_recur(T, Depth) + Depth.
+
+%% ============================================================================
+%% @doc
+%% P72 (*) Construct the bottom-up order sequence of the tree nodes.
+%%
+%% Write a function (bottom-up mtree) which returns the bottom-up sequence of 
+%% the nodes of the multiway tree 'mtree' as a Lisp list.
+%% @end
+%% ============================================================================
+bottom_up(_Tree) ->
+    todo.
+
+%%
+%% ================== 
+%%  PART VI - GRAPHS
+%% ================== 
+%%
+
+%%
+%% A graph is defined as a set of nodes and a set of edges, where each edge
+%% is a pair of nodes.
+%%
+
+%%
+%% There are several ways to represent graphs in Lisp. One method is to
+%% represent the whole graph as one data object. According to the definition
+%% of the graph as a pair of two sets (nodes and edges), we may use the 
+%% following Lisp expression to represent the example graph:
+%%
+%%  ((b c d f g h k) ( (b c) (b f) (c f) (f k) (g h) ))
+%%
+%% We call this "graph-expression" form. Note, that the lists are kept sorted,
+%% they are really sets, without duplicated elements. Each edge appears only 
+%% once in the edge list; i.e., an edge from a node x to another node y is 
+%% represented as (x y), the expression (y x) is not present. The graph-
+%% expression form is our default representation. In Common Lisp there are 
+%% pre-defined functions to work with sets.
+%%
+%% A third representation method is to associate with each node the set of 
+%% nodes that are adjacent to that node. We call this the "adjacency-list" 
+%% form. In our example:
+%%
+%%  ( (b (c f)) (c (b f)) (d ()) (f (b c k)) ...)
+%%
+%% When the edges are directed we call them "arcs". These are represented by
+%% ordered pairs. Such a graph is called a directed graph. To represent a 
+%% directed graph, the forms discussed above are slightly modified. The example
+%% graph opposite is represented as follows:
+%%
+%%  Graph-expression form
+%%   ( (r s t u v) ( (s r) (s u) (u r) (u s) (v u) ) )
+%%
+%%  Adjacency-list form
+%%
+%%   ( (r ()) (s (r u)) (t ()) (u (r)) (v (u)) )
+%%
+%% Note that the adjacency-list does not have the informoation on whether 
+%% it is a graph or a digraph.
+%%
+%% Finally, graphs and digraphs may have additional information attached to 
+%% nodes and edges (arcs). For the nodes, this is no problem, as we can 
+%% easily replace the single symbol identifiers with arbitrary symbolic 
+%% expressions, such as ("London" 4711). On the other hand, for edges we 
+%% have to extend our notation. Graphs with additional information attached
+%% to edges are called "labelled graphs".
+%% 
+%%  Graph-expression form
+%%   ( (k m p q) ( (m p 7) (p m 5) (p q 9) ) )
+%%
+%%  Adjacency-list form
+%%   ( (k ()) (m ((q 7))) (p ((m 5) (q 9))) (q ()) )
+%%
+%% Notice how the edge information has been packed into a list with two 
+%% elements, the corresponding node and the extra information.
+%%
+%% The notation for labelled graphs can also be used for so-called "multi-
+%% graphs", where more than one edge (or arc) are allowed between two given
+%% nodes.
+%%  
 
 %%
 %% =============== 
