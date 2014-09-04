@@ -145,6 +145,11 @@
 	 bottom_up/1                 %% Problem 72
 ]).
 
+%% ===================== 
+%% Miscellaneous Exports
+%% ===================== 
+-export([queens/1                    %% Problem 90
+]).
 
 -export([test/0]).
 
@@ -3868,6 +3873,158 @@ bottom_up(_Tree) ->
 %% graphs", where more than one edge (or arc) are allowed between two given
 %% nodes.
 %%  
+
+%%
+%% ========================
+%%  MISCELLANEOUS PROBLEMS
+%% ========================
+%%
+
+%% ============================================================================
+%% @doc
+%% P90 (**) Eight queens problem
+%%
+%% This is a classic problem in computer science. The objective is to place
+%% eight queens on a chessboard so that no two queens are attacking each 
+%% other; i.e., no two queens are in the same row, the same column, or on the
+%% same diagonal.
+%
+%% Hint: Represent the position of the queens as a list of numbers 1..N.
+%%
+%% Example: [4,2,7,3,6,8,5,1] means that the queen in the first column is in 
+%% row 4, the queen in the second column is in row 2, etc. Use the generate-
+%% and-test paradigm.
+%% ============================================================================
+
+%%
+%% This solution follows that given in SICP Section 2.2.
+%%
+
+%%
+%% Define an "accumulate" procedure in Erlang
+%% e.g., accumulate(fun erlang:'+'/2, 0, [1,2,3])
+%%
+-spec accumulate(fun((X,Y) -> Z), T, List) -> List when
+      X :: term(),
+      Y :: term(),
+      Z :: term(),
+      T :: term(),
+      List :: [term()].
+
+accumulate(_Op, Init, []) ->    
+    Init;
+accumulate(Op, Init, [H|T]) ->
+    Op(H, accumulate(Op, Init, T)).
+
+%%
+%% Define a "flatmap" procedure in Erlang
+%%
+-spec flatmap(fun((X) -> Y), List) -> List when
+      X :: integer(),
+      Y :: integer(),
+      List :: [term()].
+
+flatmap(Proc, List) ->
+    accumulate(fun lists:append/2, [], lists:map(Proc, List)).
+
+%%
+%% Define an "enumerate_interval" procedure in Erlang
+%%
+-spec enumerate_interval(X,Y) -> List when
+      X :: integer(),
+      Y :: integer(),
+      List :: [integer()].
+
+enumerate_interval(Start, End) when is_integer(Start), 
+				    is_integer(End), 
+				    Start >= End ->
+    [End];
+enumerate_interval(Start, End) when is_integer(Start),
+				    is_integer(End) ->
+    [Start] ++ enumerate_interval(Start+1, End).
+
+%%
+%% Note, the procedure above is "doing it by hand". A quicker, 
+%% "cheat" short-cut in Erlang would look like:
+%%
+%% enumerate_interval(Start, End) -> lists:seq(Start, End).
+%%
+
+%%
+%% Define an "empty_board" procedure:
+%%
+-spec queens_empty_board() -> List when
+      List :: [term()].
+
+queens_empty_board() ->
+    [].
+
+%%
+%% Define an "adjoin_position" procedure:
+%%
+-spec queens_adjoin_position(X, Y, List) -> List when
+      X :: pos_integer(),
+      Y :: pos_integer(),
+      List :: [pos_integer()].
+
+queens_adjoin_position(NewRow, _Column, RestOfQueens) ->
+    [NewRow] ++ RestOfQueens.
+
+%%
+%% Define a "is_safe" procedure:
+%%
+-spec queens_is_safe(N, List) -> Bool when
+      N :: pos_integer(),
+      List :: [pos_integer()],
+      Bool :: boolean().
+
+queens_is_safe(_Column, [HPos|TPos]) ->
+    SafeIter = fun(_Func, _NewRow, [], _RowOffset) ->
+		       true;
+		  (Func, NewRow, [CurrentRow|RemainingRows], RowOffset) ->
+		       A = (NewRow =:= (CurrentRow)),
+		       B = (NewRow =:= (CurrentRow + RowOffset)),
+		       C = (NewRow =:= (CurrentRow - RowOffset)),
+		       case (A or B or C) of
+			   true -> false;
+			   false -> Func(Func, NewRow, RemainingRows, RowOffset+1)
+		       end
+	       end,
+    SafeIter(SafeIter, HPos, TPos, 1).
+
+%%
+%% Define a helper method for "queens":
+%%
+-spec queens_cols(X,Y) -> MultiList when
+      X :: pos_integer(),
+      Y :: pos_integer(),
+      List :: [pos_integer()],
+      MultiList :: [List].
+
+queens_cols(0, _BoardSize) ->
+    [queens_empty_board()];
+queens_cols(K, BoardSize) ->
+    Pred1 = fun(Positions) ->
+		    queens_is_safe(K, Positions)
+	    end,
+    Pred2 = fun(RestOfQueens) ->
+		    Pred3 = fun(NewRow) ->
+				    queens_adjoin_position(NewRow, K, RestOfQueens)
+			    end,
+		    lists:map(Pred3, enumerate_interval(1, BoardSize))
+	    end,
+    lists:filter(Pred1, flatmap(Pred2, queens_cols(K-1, BoardSize))).
+
+%%
+%% Define the "queens" procedure itself:
+%%
+-spec queens(N) -> MultiList when
+      N :: pos_integer(),
+      List :: [pos_integer()],
+      MultiList :: [List].
+
+queens(BoardSize) ->
+    queens_cols(BoardSize, BoardSize).
 
 %%
 %% =============== 
