@@ -5,7 +5,7 @@
 %% Reference for the Lisp questions: http://bit.ly/1id79HU
 %%
 %% @author Paul J. Sholtz
-%% @copyright 2013 sholtz9421.com
+%% @copyright 2013-2015 sholtz9421.com
 %% @doc Implementation of the 99 (Functional) Questions in Erlang.
 %% @end
 %% =================================
