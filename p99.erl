@@ -90,9 +90,8 @@
 	 gray_no_tail/1,
 	 gray_imp/1,
 	 huffman/1,              %% Problem 50
-	 decode/2,               %% Problem 50 (prevent compiler warnings)
-	 choose_branch/2,        %% Problem 50 (prevent compiler warnings)
-	 encode/2                %% Problem 50 (prevent compiler warnings)
+	 decode/2,               %% Problem 50 (unit test)
+	 encode/2                %% Problem 50 (unit test)
 ]).
 
 %% =================== 
@@ -110,7 +109,7 @@
 	 sym_cbal_trees_print/1,     %% Problem 58
 	 hbal_tree/1,                %% Problem 59
 	 hbal_tree_nodes/1,          %% Problem 60
-	 floor/1,                    %% Problem 60 (prevent compiler warnings)
+	 floor/1,                    %% Problem 60 (unit test)
 	 min_nodes/1,                %% Problem 60 (prevent compiler warnings)
 	 max_nodes/1,                %% Problem 60 (prevent compiler warnings)
 	 count_leaves/1,             %% Problem 61
@@ -159,9 +158,12 @@
 -export([document/0]).
 
 %%
-%% It will mess up our "length" procedure if we import the BIF.
+%% (a) It will mess up our "length" procedure if we import the BIF;
+%% (b) Turn off warnings for unused functions;
 %%
--compile({no_auto_import,[length/1]}).
+-compile({no_auto_import, [length/1]}).
+-compile({nowarn_unused_function, [{min_nodes, 1},
+				   {max_nodes, 1}]}).
 
 %%
 %% =============
