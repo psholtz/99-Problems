@@ -110,8 +110,6 @@
 	 hbal_tree/1,                %% Problem 59
 	 hbal_tree_nodes/1,          %% Problem 60
 	 floor/1,                    %% Problem 60 (unit test)
-	 min_nodes/1,                %% Problem 60 (prevent compiler warnings)
-	 max_nodes/1,                %% Problem 60 (prevent compiler warnings)
 	 count_leaves/1,             %% Problem 61
 	 leaves/1,                   %% Problem 61A
 	 internals/1,                %% Problem 62
