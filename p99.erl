@@ -2794,7 +2794,7 @@ hbal_tree(N) when N > 1 ->
 
 %% =============================================================================
 %% @doc
-%% P60 (**) Construt height-balanced binary trees with a given number of nodes
+%% P60 (**) Construct height-balanced binary trees with a given number of nodes
 %%
 %% Consider a height-balanced tree of height H. What is the maximum number of 
 %% nodes it can contain? Clearly, MAX N = 2**H - 1. However, what is the minimum
